@@ -78,8 +78,8 @@ export function MapView({
   selectedPlot, 
   onPlotSelect,
   onMapClick,
-  center = [40.7128, -74.006], // Default to NYC
-  zoom = 12
+  center = [24.7136, 46.6753], // Default to Riyadh
+  zoom = 11
 }: MapViewProps) {
   return (
     <div className="h-full w-full relative" data-testid="map-container">

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { MapView } from "@/components/map-view";
@@ -15,6 +15,7 @@ import type { Plot, HbuStudy } from "@shared/schema";
 export default function Home() {
   const { toast } = useToast();
   const [selectedPlot, setSelectedPlot] = useState<Plot | null>(null);
+  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [viewingStudy, setViewingStudy] = useState<HbuStudy | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [layers, setLayers] = useState({
@@ -28,6 +29,14 @@ export default function Home() {
   const { data: plots = [], isLoading: plotsLoading, error: plotsError } = useQuery<Plot[]>({
     queryKey: ['/api/plots'],
   });
+
+  // Auto-select first plot on initial load
+  useEffect(() => {
+    if (plots.length > 0 && !initialSelectionDone && !selectedPlot) {
+      setSelectedPlot(plots[0]);
+      setInitialSelectionDone(true);
+    }
+  }, [plots, initialSelectionDone, selectedPlot]);
 
   // Fetch studies for selected plot
   const { data: studies = [], isLoading: studiesLoading } = useQuery<HbuStudy[]>({
