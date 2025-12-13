@@ -65,11 +65,14 @@ export async function registerRoutes(
       const study = await storage.createStudy({
         plotId: body.plotId,
         executiveSummary: analysis.executiveSummary,
-        zoningAnalysis: analysis.zoningAnalysis,
-        marketDemand: analysis.marketDemand,
-        financialFeasibility: analysis.financialFeasibility,
-        developmentRecommendations: analysis.developmentRecommendations,
-        supportingData: null,
+        zoningDetails: analysis.zoningDetails,
+        marketData: analysis.marketData,
+        scenarios: analysis.scenarios,
+        recommendedScenario: analysis.recommendedScenario,
+        spaceProgram: analysis.spaceProgram,
+        financialSummary: analysis.financialSummary,
+        riskFactors: analysis.riskFactors,
+        conclusion: analysis.conclusion,
       });
 
       res.json({ study });

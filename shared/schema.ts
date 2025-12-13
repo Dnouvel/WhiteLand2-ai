@@ -17,17 +17,79 @@ export const plots = pgTable("plots", {
   boundaries: jsonb("boundaries").$type<number[][]>(), // GeoJSON-like polygon coordinates
 });
 
+// Enhanced HBU Analysis Types
+export interface DevelopmentScenario {
+  name: string;
+  description: string;
+  landUse: string;
+  gfa: number;
+  units?: number;
+  estimatedCost: number;
+  projectedRevenue: number;
+  irr: number;
+  npv: number;
+  paybackPeriod: number;
+  riskLevel: string;
+}
+
+export interface ZoningDetails {
+  zoningCode: string;
+  landUseCategory: string;
+  permittedUses: string[];
+  conditionalUses: string[];
+  maxFAR: number;
+  maxHeight: number;
+  maxCoverage: number;
+  setbacks: { front: number; rear: number; side: number };
+  parkingRequirements: string;
+  buildingCodeNotes: string;
+}
+
+export interface MarketData {
+  demandDrivers: string[];
+  comparableTransactions: string;
+  absorptionRate: string;
+  vacancyRate: string;
+  averageRent: string;
+  capRate: string;
+  marketTrends: string;
+}
+
+export interface SpaceProgram {
+  totalGFA: number;
+  buildableArea: number;
+  efficiency: number;
+  floors: number;
+  components: { use: string; area: number; percentage: number }[];
+}
+
+export interface FinancialSummary {
+  landValue: number;
+  hardCosts: number;
+  softCosts: number;
+  totalDevelopmentCost: number;
+  debtFinancing: number;
+  equityRequired: number;
+  projectedNOI: number;
+  stabilizedValue: number;
+  developmentMargin: number;
+  returnOnCost: number;
+}
+
 // HBU Study schema
 export const hbuStudies = pgTable("hbu_studies", {
   id: varchar("id").primaryKey(),
   plotId: varchar("plot_id").notNull().references(() => plots.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   executiveSummary: text("executive_summary").notNull(),
-  zoningAnalysis: text("zoning_analysis").notNull(),
-  marketDemand: text("market_demand").notNull(),
-  financialFeasibility: text("financial_feasibility").notNull(),
-  developmentRecommendations: text("development_recommendations").notNull(),
-  supportingData: jsonb("supporting_data").$type<Record<string, unknown>>(),
+  zoningDetails: jsonb("zoning_details").$type<ZoningDetails>(),
+  marketData: jsonb("market_data").$type<MarketData>(),
+  scenarios: jsonb("scenarios").$type<DevelopmentScenario[]>(),
+  recommendedScenario: text("recommended_scenario"),
+  spaceProgram: jsonb("space_program").$type<SpaceProgram>(),
+  financialSummary: jsonb("financial_summary").$type<FinancialSummary>(),
+  riskFactors: jsonb("risk_factors").$type<string[]>(),
+  conclusion: text("conclusion"),
 });
 
 // Users schema for future auth
