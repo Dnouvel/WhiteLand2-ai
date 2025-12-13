@@ -48,7 +48,7 @@ export async function registerRoutes(
     }
   });
 
-  // Generate new HBU study
+  // Get HBU study for a plot (uses pre-stored data, OpenAI kept for future use)
   app.post("/api/hbu-studies", async (req, res) => {
     try {
       const body = hbuStudyRequestSchema.parse(req.body);
@@ -58,30 +58,23 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Plot not found" });
       }
 
-      // Generate HBU analysis using OpenAI
-      const analysis = await generateHbuStudy(plot);
+      // Return existing pre-stored study if available
+      const existingStudies = await storage.getStudiesForPlot(body.plotId);
+      if (existingStudies.length > 0) {
+        return res.json({ study: existingStudies[0] });
+      }
 
-      // Save the study
-      const study = await storage.createStudy({
-        plotId: body.plotId,
-        executiveSummary: analysis.executiveSummary,
-        zoningDetails: analysis.zoningDetails,
-        marketData: analysis.marketData,
-        scenarios: analysis.scenarios,
-        recommendedScenario: analysis.recommendedScenario,
-        spaceProgram: analysis.spaceProgram,
-        financialSummary: analysis.financialSummary,
-        riskFactors: analysis.riskFactors,
-        conclusion: analysis.conclusion,
-      });
-
-      res.json({ study });
+      // Fallback: Generate using OpenAI if no stored study exists (kept for future use)
+      // const analysis = await generateHbuStudy(plot);
+      // const study = await storage.createStudy({ ... });
+      
+      res.status(404).json({ error: "No HBU study available for this plot" });
     } catch (error) {
-      console.error("Error generating HBU study:", error);
+      console.error("Error fetching HBU study:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: "Invalid request body", details: error.errors });
       }
-      res.status(500).json({ error: "Failed to generate HBU study" });
+      res.status(500).json({ error: "Failed to fetch HBU study" });
     }
   });
 

@@ -97,7 +97,7 @@ export function PlotInfoPanel({
         <div className="grid grid-cols-2 gap-4">
           <MetricCard 
             label="Lot Size" 
-            value={`${plot.size.toFixed(2)} ac`} 
+            value={`${plot.size.toLocaleString()} sqm`} 
             icon={Maximize2} 
           />
           <MetricCard 
@@ -107,7 +107,7 @@ export function PlotInfoPanel({
           />
           <MetricCard 
             label="Market Value" 
-            value={plot.marketValue ? `$${(plot.marketValue / 1000000).toFixed(2)}M` : "N/A"} 
+            value={plot.marketValue ? `SAR ${(plot.marketValue / 1000000).toFixed(2)}M` : "N/A"} 
             icon={DollarSign} 
           />
           <MetricCard 

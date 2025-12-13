@@ -572,14 +572,45 @@ export function HbuReportModal({ study, plot, open, onClose }: HbuReportModalPro
       addSubHeader("Demand Drivers:");
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text(m.demandDrivers.join(", "), margin, yPos);
-      yPos += 8;
+      const driversText = doc.splitTextToSize(m.demandDrivers.join(", "), contentWidth);
+      driversText.forEach((line: string) => {
+        checkPage(5);
+        doc.text(line, margin, yPos);
+        yPos += 4;
+      });
+      yPos += 4;
 
-      addRow("Vacancy Rate", m.vacancyRate, col1);
-      addRow("Average Rent", m.averageRent, col2);
-      addRow("Cap Rate", m.capRate, col3);
-      addRow("Absorption", m.absorptionRate, col4);
-      yPos += 12;
+      // Market metrics in proper table format
+      doc.setFillColor(240, 240, 240);
+      doc.rect(margin, yPos - 3, contentWidth, 6, 'F');
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("Metric", margin + 2, yPos);
+      doc.text("Value", margin + 55, yPos);
+      yPos += 7;
+
+      const marketMetrics = [
+        { label: "Vacancy Rate", value: m.vacancyRate },
+        { label: "Average Rent", value: m.averageRent },
+        { label: "Cap Rate", value: m.capRate },
+        { label: "Absorption Rate", value: m.absorptionRate },
+      ];
+
+      doc.setFont("helvetica", "normal");
+      marketMetrics.forEach((metric) => {
+        checkPage(6);
+        doc.text(metric.label, margin + 2, yPos);
+        const valueLines = doc.splitTextToSize(metric.value, contentWidth - 60);
+        valueLines.forEach((line: string, idx: number) => {
+          if (idx > 0) {
+            checkPage(4);
+            yPos += 4;
+          }
+          doc.text(line, margin + 55, yPos);
+        });
+        yPos += 5;
+      });
+      yPos += 4;
 
       addSubHeader("Comparable Transactions:");
       addText(m.comparableTransactions);
@@ -908,7 +939,7 @@ ${study.conclusion}
             <div className="flex items-center gap-4 flex-wrap">
               <Badge variant="secondary">{plot.zoning}</Badge>
               <Badge variant="outline">{plot.currentUse}</Badge>
-              <Badge variant="outline">{plot.size.toFixed(2)} acres</Badge>
+              <Badge variant="outline">{plot.size.toLocaleString()} sqm</Badge>
               {plot.marketValue && (
                 <Badge variant="outline">SAR {(plot.marketValue / 1000000).toFixed(2)}M</Badge>
               )}
