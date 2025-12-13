@@ -33,10 +33,10 @@ function PlotPolygon({
     <Polygon
       positions={positions}
       pathOptions={{
-        color: isSelected ? "hsl(210, 78%, 48%)" : "hsl(210, 6%, 35%)",
-        fillColor: isSelected ? "hsl(210, 78%, 48%)" : "hsl(210, 12%, 50%)",
-        fillOpacity: isSelected ? 0.35 : 0.15,
-        weight: isSelected ? 3 : 2,
+        color: isSelected ? "hsl(210, 78%, 48%)" : "hsl(25, 95%, 53%)",
+        fillColor: isSelected ? "hsl(210, 78%, 48%)" : "hsl(25, 95%, 53%)",
+        fillOpacity: isSelected ? 0.5 : 0.4,
+        weight: isSelected ? 4 : 3,
       }}
       eventHandlers={{
         click: (e) => {
@@ -79,7 +79,7 @@ export function MapView({
   onPlotSelect,
   onMapClick,
   center = [40.7128, -74.006], // Default to NYC
-  zoom = 14
+  zoom = 12
 }: MapViewProps) {
   return (
     <div className="h-full w-full relative" data-testid="map-container">
