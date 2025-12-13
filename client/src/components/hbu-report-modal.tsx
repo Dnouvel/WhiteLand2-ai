@@ -391,98 +391,329 @@ export function HbuReportModal({ study, plot, open, onClose }: HbuReportModalPro
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
     const contentWidth = pageWidth - 2 * margin;
+    const col1 = margin;
+    const col2 = margin + 45;
+    const col3 = margin + 90;
+    const col4 = margin + 135;
     let yPos = margin;
 
+    const checkPage = (needed: number = 20) => {
+      if (yPos > 280 - needed) {
+        doc.addPage();
+        yPos = margin;
+      }
+    };
+
+    const addSectionHeader = (title: string) => {
+      checkPage(30);
+      doc.setFillColor(240, 240, 240);
+      doc.rect(margin, yPos - 4, contentWidth, 10, 'F');
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(title, margin + 2, yPos + 2);
+      yPos += 12;
+    };
+
+    const addSubHeader = (title: string) => {
+      checkPage(15);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(title, margin, yPos);
+      yPos += 6;
+    };
+
+    const addRow = (label: string, value: string, x: number = margin) => {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100);
+      doc.text(label, x, yPos);
+      doc.setTextColor(0);
+      doc.setFont("helvetica", "bold");
+      doc.text(value, x, yPos + 4);
+      doc.setFont("helvetica", "normal");
+    };
+
+    const addText = (text: string) => {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(0);
+      const lines = doc.splitTextToSize(text, contentWidth);
+      lines.forEach((line: string) => {
+        checkPage(5);
+        doc.text(line, margin, yPos);
+        yPos += 4;
+      });
+    };
+
+    // Title
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text("Highest & Best Use Study", margin, yPos);
-    yPos += 10;
+    yPos += 12;
 
-    doc.setFontSize(12);
+    // Property Info
+    doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text(`Property: ${plot.address}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Parcel: ${plot.parcelNumber}`, margin, yPos);
-    yPos += 6;
+    yPos += 5;
+    doc.text(`Parcel: ${plot.parcelNumber} | Size: ${plot.size.toFixed(2)} acres | Zoning: ${plot.zoning}`, margin, yPos);
+    yPos += 5;
     const createdDate = study.createdAt ? new Date(study.createdAt) : new Date();
-    doc.text(`Date: ${createdDate.toLocaleDateString()}`, margin, yPos);
-    yPos += 15;
+    doc.text(`Generated: ${createdDate.toLocaleDateString()} at ${createdDate.toLocaleTimeString()}`, margin, yPos);
+    yPos += 12;
 
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Executive Summary", margin, yPos);
+    // Executive Summary
+    addSectionHeader("EXECUTIVE SUMMARY");
+    addText(study.executiveSummary);
     yPos += 8;
 
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    const summaryLines = doc.splitTextToSize(study.executiveSummary, contentWidth);
-    summaryLines.forEach((line: string) => {
-      if (yPos > 280) {
-        doc.addPage();
-        yPos = margin;
-      }
-      doc.text(line, margin, yPos);
-      yPos += 5;
-    });
-    yPos += 10;
-
+    // 1. SCENARIOS TAB
     if (study.scenarios && study.scenarios.length > 0) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = margin;
+      addSectionHeader("1. DEVELOPMENT SCENARIOS");
+      
+      if (study.recommendedScenario) {
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(0, 100, 0);
+        doc.text(`Recommendation: ${study.recommendedScenario}`, margin, yPos);
+        doc.setTextColor(0);
+        yPos += 8;
       }
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("Development Scenarios", margin, yPos);
-      yPos += 8;
 
       study.scenarios.forEach((scenario, index) => {
-        if (yPos > 260) {
-          doc.addPage();
-          yPos = margin;
+        checkPage(45);
+        
+        // Scenario header with background
+        const isRecommended = study.recommendedScenario?.includes(scenario.name);
+        if (isRecommended) {
+          doc.setFillColor(220, 252, 231);
+        } else {
+          doc.setFillColor(248, 248, 248);
         }
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        doc.text(`${index + 1}. ${scenario.name}`, margin, yPos);
-        yPos += 6;
+        doc.rect(margin, yPos - 4, contentWidth, 8, 'F');
+        
         doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${scenario.name}${isRecommended ? ' [RECOMMENDED]' : ''}`, margin + 2, yPos + 1);
+        yPos += 10;
+
+        doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
-        doc.text(`Land Use: ${scenario.landUse} | GFA: ${scenario.gfa.toLocaleString()} sqm`, margin, yPos);
+        doc.text(`Land Use: ${scenario.landUse}`, margin, yPos);
         yPos += 5;
-        doc.text(`Cost: SAR ${(scenario.estimatedCost / 1000000).toFixed(1)}M | Revenue: SAR ${(scenario.projectedRevenue / 1000000).toFixed(1)}M`, margin, yPos);
-        yPos += 5;
-        doc.text(`IRR: ${scenario.irr.toFixed(1)}% | NPV: SAR ${(scenario.npv / 1000000).toFixed(1)}M | Risk: ${scenario.riskLevel}`, margin, yPos);
-        yPos += 8;
+
+        const descLines = doc.splitTextToSize(scenario.description, contentWidth);
+        descLines.slice(0, 2).forEach((line: string) => {
+          doc.text(line, margin, yPos);
+          yPos += 4;
+        });
+        yPos += 2;
+
+        // Metrics table
+        addRow("GFA", `${scenario.gfa.toLocaleString()} sqm`, col1);
+        addRow("Units", scenario.units ? `${scenario.units}` : "N/A", col2);
+        addRow("Est. Cost", formatCurrency(scenario.estimatedCost), col3);
+        addRow("Revenue", formatCurrency(scenario.projectedRevenue), col4);
+        yPos += 12;
+
+        addRow("IRR", `${scenario.irr.toFixed(1)}%`, col1);
+        addRow("NPV", formatCurrency(scenario.npv), col2);
+        addRow("Payback", `${scenario.paybackPeriod.toFixed(1)} years`, col3);
+        addRow("Risk", scenario.riskLevel, col4);
+        yPos += 14;
       });
+      yPos += 4;
     }
 
-    if (study.conclusion) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = margin;
-      }
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("Conclusion", margin, yPos);
-      yPos += 8;
-      doc.setFontSize(10);
+    // 2. ZONING TAB
+    if (study.zoningDetails) {
+      addSectionHeader("2. ZONING DETAILS");
+      const z = study.zoningDetails;
+
+      addRow("Zoning Code", z.zoningCode, col1);
+      addRow("Land Use Category", z.landUseCategory, col2);
+      addRow("Max FAR", `${z.maxFAR}`, col3);
+      addRow("Max Height", `${z.maxHeight}m`, col4);
+      yPos += 12;
+
+      addRow("Max Coverage", `${z.maxCoverage}%`, col1);
+      addRow("Front Setback", `${z.setbacks.front}m`, col2);
+      addRow("Rear Setback", `${z.setbacks.rear}m`, col3);
+      addRow("Side Setback", `${z.setbacks.side}m`, col4);
+      yPos += 12;
+
+      addSubHeader("Permitted Uses:");
       doc.setFont("helvetica", "normal");
-      const conclusionLines = doc.splitTextToSize(study.conclusion, contentWidth);
-      conclusionLines.forEach((line: string) => {
-        if (yPos > 280) {
-          doc.addPage();
-          yPos = margin;
-        }
-        doc.text(line, margin, yPos);
+      doc.setFontSize(9);
+      doc.text(z.permittedUses.join(", "), margin, yPos);
+      yPos += 6;
+
+      if (z.conditionalUses.length > 0) {
+        addSubHeader("Conditional Uses:");
+        doc.setFont("helvetica", "normal");
+        doc.text(z.conditionalUses.join(", "), margin, yPos);
+        yPos += 6;
+      }
+
+      addSubHeader("Parking Requirements:");
+      addText(z.parkingRequirements);
+      yPos += 2;
+
+      addSubHeader("Building Code Notes:");
+      addText(z.buildingCodeNotes);
+      yPos += 6;
+    }
+
+    // 3. MARKET TAB
+    if (study.marketData) {
+      addSectionHeader("3. MARKET ANALYSIS");
+      const m = study.marketData;
+
+      addSubHeader("Demand Drivers:");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(m.demandDrivers.join(", "), margin, yPos);
+      yPos += 8;
+
+      addRow("Vacancy Rate", m.vacancyRate, col1);
+      addRow("Average Rent", m.averageRent, col2);
+      addRow("Cap Rate", m.capRate, col3);
+      addRow("Absorption", m.absorptionRate, col4);
+      yPos += 12;
+
+      addSubHeader("Comparable Transactions:");
+      addText(m.comparableTransactions);
+      yPos += 2;
+
+      addSubHeader("Market Trends:");
+      addText(m.marketTrends);
+      yPos += 6;
+    }
+
+    // 4. PROGRAM TAB
+    if (study.spaceProgram) {
+      addSectionHeader("4. SPACE PROGRAM");
+      const p = study.spaceProgram;
+
+      addRow("Total GFA", `${p.totalGFA.toLocaleString()} sqm`, col1);
+      addRow("Buildable Area", `${p.buildableArea.toLocaleString()} sqm`, col2);
+      addRow("Efficiency", `${p.efficiency}%`, col3);
+      addRow("Floors", `${p.floors}`, col4);
+      yPos += 14;
+
+      addSubHeader("Component Breakdown:");
+      yPos += 2;
+      
+      // Table header
+      doc.setFillColor(230, 230, 230);
+      doc.rect(margin, yPos - 3, contentWidth, 6, 'F');
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("Use", col1, yPos);
+      doc.text("Area (sqm)", col2, yPos);
+      doc.text("Percentage", col3, yPos);
+      yPos += 8;
+
+      doc.setFont("helvetica", "normal");
+      p.components.forEach((comp) => {
+        checkPage(6);
+        doc.text(comp.use, col1, yPos);
+        doc.text(comp.area.toLocaleString(), col2, yPos);
+        doc.text(`${comp.percentage}%`, col3, yPos);
         yPos += 5;
       });
+      yPos += 6;
+    }
+
+    // 5. FINANCIAL TAB
+    if (study.financialSummary) {
+      addSectionHeader("5. FINANCIAL SUMMARY");
+      const f = study.financialSummary;
+
+      addSubHeader("Development Costs:");
+      yPos += 2;
+      
+      doc.setFillColor(230, 230, 230);
+      doc.rect(margin, yPos - 3, 80, 6, 'F');
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("Cost Item", col1, yPos);
+      doc.text("Amount (SAR)", col2, yPos);
+      yPos += 7;
+
+      doc.setFont("helvetica", "normal");
+      doc.text("Land Value", col1, yPos);
+      doc.text(formatCurrency(f.landValue), col2, yPos);
+      yPos += 5;
+      doc.text("Hard Costs", col1, yPos);
+      doc.text(formatCurrency(f.hardCosts), col2, yPos);
+      yPos += 5;
+      doc.text("Soft Costs", col1, yPos);
+      doc.text(formatCurrency(f.softCosts), col2, yPos);
+      yPos += 5;
+      doc.setFont("helvetica", "bold");
+      doc.text("Total Development Cost", col1, yPos);
+      doc.text(formatCurrency(f.totalDevelopmentCost), col2, yPos);
+      yPos += 10;
+
+      addSubHeader("Capital Structure:");
+      doc.setFont("helvetica", "normal");
+      doc.text("Debt Financing", col1, yPos);
+      doc.text(formatCurrency(f.debtFinancing), col2, yPos);
+      yPos += 5;
+      doc.text("Equity Required", col1, yPos);
+      doc.text(formatCurrency(f.equityRequired), col2, yPos);
+      yPos += 10;
+
+      addSubHeader("Returns:");
+      doc.setFont("helvetica", "normal");
+      doc.text("Projected NOI", col1, yPos);
+      doc.setTextColor(0, 128, 0);
+      doc.text(formatCurrency(f.projectedNOI), col2, yPos);
+      doc.setTextColor(0);
+      yPos += 5;
+      doc.text("Stabilized Value", col1, yPos);
+      doc.text(formatCurrency(f.stabilizedValue), col2, yPos);
+      yPos += 10;
+
+      addSubHeader("Key Metrics:");
+      doc.setFont("helvetica", "bold");
+      doc.text("Development Margin", col1, yPos);
+      doc.setTextColor(0, 128, 0);
+      doc.text(`${f.developmentMargin.toFixed(1)}%`, col2, yPos);
+      doc.setTextColor(0);
+      yPos += 5;
+      doc.text("Return on Cost", col1, yPos);
+      doc.setTextColor(0, 128, 0);
+      doc.text(`${f.returnOnCost.toFixed(1)}%`, col2, yPos);
+      doc.setTextColor(0);
+      yPos += 10;
+    }
+
+    // Risk Factors
+    if (study.riskFactors && study.riskFactors.length > 0) {
+      addSectionHeader("RISK FACTORS");
+      study.riskFactors.forEach((risk, i) => {
+        checkPage(8);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${i + 1}. ${risk}`, margin, yPos);
+        yPos += 5;
+      });
+      yPos += 4;
+    }
+
+    // Conclusion
+    if (study.conclusion) {
+      addSectionHeader("CONCLUSION & NEXT STEPS");
+      addText(study.conclusion);
     }
 
     doc.save(`HBU-Study-${plot.parcelNumber}-${new Date().toISOString().split('T')[0]}.pdf`);
     
     toast({
       title: "PDF Exported",
-      description: "Your HBU study has been downloaded.",
+      description: "Your comprehensive HBU study has been downloaded.",
     });
   };
 
@@ -493,7 +724,7 @@ export function HbuReportModal({ study, plot, open, onClose }: HbuReportModalPro
 ========================
 
 Property: ${plot.address}
-Parcel: ${plot.parcelNumber}
+Parcel: ${plot.parcelNumber} | Size: ${plot.size.toFixed(2)} acres | Zoning: ${plot.zoning}
 Date: ${new Date(study.createdAt).toLocaleDateString()}
 
 EXECUTIVE SUMMARY
@@ -501,37 +732,126 @@ EXECUTIVE SUMMARY
 ${study.executiveSummary}
 `;
 
+    // 1. SCENARIOS
     if (study.scenarios && study.scenarios.length > 0) {
       text += `
-DEVELOPMENT SCENARIOS
----------------------
-`;
+
+1. DEVELOPMENT SCENARIOS
+------------------------
+${study.recommendedScenario ? `Recommendation: ${study.recommendedScenario}\n` : ''}`;
       study.scenarios.forEach((scenario, i) => {
+        const isRec = study.recommendedScenario?.includes(scenario.name) ? ' [RECOMMENDED]' : '';
         text += `
-${i + 1}. ${scenario.name}
-   Land Use: ${scenario.landUse}
-   GFA: ${scenario.gfa.toLocaleString()} sqm
-   Cost: SAR ${(scenario.estimatedCost / 1000000).toFixed(1)}M
-   Revenue: SAR ${(scenario.projectedRevenue / 1000000).toFixed(1)}M
-   IRR: ${scenario.irr.toFixed(1)}%
-   NPV: SAR ${(scenario.npv / 1000000).toFixed(1)}M
-   Risk Level: ${scenario.riskLevel}
+${scenario.name}${isRec}
+  Land Use: ${scenario.landUse}
+  Description: ${scenario.description}
+  
+  GFA: ${scenario.gfa.toLocaleString()} sqm | Units: ${scenario.units || 'N/A'}
+  Est. Cost: ${formatCurrency(scenario.estimatedCost)} | Revenue: ${formatCurrency(scenario.projectedRevenue)}
+  IRR: ${scenario.irr.toFixed(1)}% | NPV: ${formatCurrency(scenario.npv)}
+  Payback: ${scenario.paybackPeriod.toFixed(1)} years | Risk: ${scenario.riskLevel}
 `;
       });
     }
 
-    if (study.recommendedScenario) {
+    // 2. ZONING
+    if (study.zoningDetails) {
+      const z = study.zoningDetails;
       text += `
-RECOMMENDATION
---------------
-${study.recommendedScenario}
+
+2. ZONING DETAILS
+-----------------
+Zoning Code: ${z.zoningCode} | Land Use Category: ${z.landUseCategory}
+Max FAR: ${z.maxFAR} | Max Height: ${z.maxHeight}m | Max Coverage: ${z.maxCoverage}%
+Setbacks: Front ${z.setbacks.front}m | Rear ${z.setbacks.rear}m | Side ${z.setbacks.side}m
+
+Permitted Uses: ${z.permittedUses.join(', ')}
+${z.conditionalUses.length > 0 ? `Conditional Uses: ${z.conditionalUses.join(', ')}` : ''}
+
+Parking: ${z.parkingRequirements}
+Building Code: ${z.buildingCodeNotes}
 `;
     }
 
+    // 3. MARKET
+    if (study.marketData) {
+      const m = study.marketData;
+      text += `
+
+3. MARKET ANALYSIS
+------------------
+Demand Drivers: ${m.demandDrivers.join(', ')}
+
+Vacancy Rate: ${m.vacancyRate} | Average Rent: ${m.averageRent}
+Cap Rate: ${m.capRate} | Absorption: ${m.absorptionRate}
+
+Comparables: ${m.comparableTransactions}
+Market Trends: ${m.marketTrends}
+`;
+    }
+
+    // 4. SPACE PROGRAM
+    if (study.spaceProgram) {
+      const p = study.spaceProgram;
+      text += `
+
+4. SPACE PROGRAM
+----------------
+Total GFA: ${p.totalGFA.toLocaleString()} sqm | Buildable Area: ${p.buildableArea.toLocaleString()} sqm
+Efficiency: ${p.efficiency}% | Floors: ${p.floors}
+
+Component Breakdown:
+`;
+      p.components.forEach((comp) => {
+        text += `  - ${comp.use}: ${comp.area.toLocaleString()} sqm (${comp.percentage}%)\n`;
+      });
+    }
+
+    // 5. FINANCIAL
+    if (study.financialSummary) {
+      const f = study.financialSummary;
+      text += `
+
+5. FINANCIAL SUMMARY
+--------------------
+Development Costs:
+  Land Value: ${formatCurrency(f.landValue)}
+  Hard Costs: ${formatCurrency(f.hardCosts)}
+  Soft Costs: ${formatCurrency(f.softCosts)}
+  Total Development Cost: ${formatCurrency(f.totalDevelopmentCost)}
+
+Capital Structure:
+  Debt Financing: ${formatCurrency(f.debtFinancing)}
+  Equity Required: ${formatCurrency(f.equityRequired)}
+
+Returns:
+  Projected NOI: ${formatCurrency(f.projectedNOI)}
+  Stabilized Value: ${formatCurrency(f.stabilizedValue)}
+
+Key Metrics:
+  Development Margin: ${f.developmentMargin.toFixed(1)}%
+  Return on Cost: ${f.returnOnCost.toFixed(1)}%
+`;
+    }
+
+    // RISK FACTORS
+    if (study.riskFactors && study.riskFactors.length > 0) {
+      text += `
+
+RISK FACTORS
+------------
+`;
+      study.riskFactors.forEach((risk, i) => {
+        text += `${i + 1}. ${risk}\n`;
+      });
+    }
+
+    // CONCLUSION
     if (study.conclusion) {
       text += `
-CONCLUSION
-----------
+
+CONCLUSION & NEXT STEPS
+-----------------------
 ${study.conclusion}
 `;
     }
@@ -540,7 +860,7 @@ ${study.conclusion}
     
     toast({
       title: "Copied to Clipboard",
-      description: "The full report has been copied.",
+      description: "The comprehensive report has been copied.",
     });
   };
 
