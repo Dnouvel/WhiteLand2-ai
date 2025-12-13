@@ -39,7 +39,10 @@ function PlotPolygon({
         weight: isSelected ? 3 : 2,
       }}
       eventHandlers={{
-        click: onClick,
+        click: (e) => {
+          e.originalEvent.stopPropagation();
+          onClick();
+        },
       }}
     />
   );
