@@ -1,8 +1,10 @@
-# PlotVision - AI-Powered HBU Analysis Portal
+# PlotVision - AI-Powered HBU Analysis Platform
 
 ## Overview
 
-PlotVision is a geographical portal for city plots that provides AI-powered Highest and Best Use (HBU) analysis. The application features an interactive map interface where users can view city plots, examine property details, and request AI-generated real estate analysis studies. The core functionality centers around visualizing plot boundaries on a map, displaying property information, and generating comprehensive HBU reports using OpenAI's GPT-4o model.
+PlotVision is a geographical portal for city plot analysis, specifically designed for Highest and Best Use (HBU) studies. The application provides an interactive map-first interface for viewing city plots in Riyadh, Saudi Arabia, with AI-powered analysis capabilities for real estate development decisions.
+
+The platform displays property boundaries on an interactive map, allows users to select plots and view detailed information, and generates comprehensive HBU reports including development scenarios, zoning analysis, market data, and financial projections.
 
 ## User Preferences
 
@@ -11,78 +13,60 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend Architecture
-- **Framework**: React 18 with TypeScript, built using Vite
-- **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack React Query for server state, local React state for UI
+- **Framework**: React 18 with TypeScript
+- **Routing**: Wouter (lightweight client-side routing)
+- **State Management**: TanStack React Query for server state
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
-- **Styling**: Tailwind CSS with custom CSS variables for theming (light/dark mode support)
-- **Map Integration**: Leaflet with react-leaflet for interactive map rendering
+- **Styling**: Tailwind CSS with custom design tokens and CSS variables for theming
+- **Map Integration**: Leaflet with react-leaflet for interactive mapping
 
-The frontend follows a map-first design philosophy where the interactive map occupies 60-70% of the viewport with a collapsible information panel on the right side.
+The frontend follows a map-first design pattern where the interactive map occupies 60-70% of the viewport with a collapsible information panel for plot details and HBU reports.
 
 ### Backend Architecture
-- **Runtime**: Node.js with Express.js
-- **Language**: TypeScript with ESM modules
-- **API Pattern**: RESTful endpoints prefixed with `/api`
-- **Build System**: esbuild for production server bundling, Vite for client
+- **Runtime**: Node.js with Express
+- **Language**: TypeScript with ES modules
+- **API Design**: RESTful endpoints under `/api/` prefix
+- **Build Process**: Vite for frontend, esbuild for server bundling
 
-Key API endpoints:
-- `GET /api/plots` - Retrieve all plots
-- `GET /api/plots/:id` - Get single plot details
-- `GET /api/plots/:id/studies` - Get HBU studies for a plot
-- `POST /api/hbu-studies` - Generate new AI-powered HBU study
+The server implements a simple storage interface pattern that currently uses in-memory data with sample plots for Riyadh. This abstraction allows for easy migration to PostgreSQL when needed.
 
 ### Data Layer
 - **ORM**: Drizzle ORM with PostgreSQL dialect
 - **Schema Location**: `shared/schema.ts` contains all database table definitions
-- **Validation**: Zod schemas generated from Drizzle schemas using drizzle-zod
-- **Current Storage**: In-memory storage implementation with sample NYC plot data (database-ready schema exists)
+- **Validation**: Zod schemas generated from Drizzle for type-safe API operations
 
-Database tables:
-- `plots` - Property data including boundaries, zoning, market value
-- `hbu_studies` - AI-generated analysis reports linked to plots
-- `users` - User authentication (prepared for future implementation)
+Key entities:
+- Plots: Property parcels with coordinates, boundaries, zoning, and market values
+- HBU Studies: Analysis reports with development scenarios, zoning details, market data, and financial projections
+- Users: Basic user accounts for future authentication
 
 ### AI Integration
-- **Provider**: OpenAI GPT-4o model
-- **Purpose**: Generates comprehensive HBU (Highest and Best Use) studies
-- **Output Structure**: JSON with sections for executive summary, zoning analysis, market demand, financial feasibility, and development recommendations
+- **Provider**: OpenAI API configured in `server/openai.ts`
+- **Purpose**: Generating HBU analysis reports with development scenarios, risk assessments, and financial projections
+- **Current State**: OpenAI integration exists but pre-stored data is used for demonstrations
 
-### Project Structure
-```
-├── client/           # React frontend application
-│   └── src/
-│       ├── components/   # UI components including shadcn/ui
-│       ├── pages/        # Route page components
-│       ├── hooks/        # Custom React hooks
-│       └── lib/          # Utility functions and query client
-├── server/           # Express backend
-│   ├── routes.ts     # API route definitions
-│   ├── storage.ts    # Data access layer
-│   └── openai.ts     # AI integration
-├── shared/           # Shared code between client and server
-│   └── schema.ts     # Drizzle database schema
-└── migrations/       # Database migrations (Drizzle Kit)
-```
+### Design System
+- Professional dashboard aesthetic inspired by Google Maps and Zillow
+- Inter font for UI, JetBrains Mono for data/coordinates
+- Light/dark theme support via CSS variables
+- Consistent spacing using Tailwind units (2, 4, 6, 8)
 
 ## External Dependencies
 
 ### Third-Party Services
-- **OpenAI API**: GPT-4o model for generating HBU analysis reports (requires `OPENAI_API_KEY` environment variable)
-- **Leaflet Tiles**: Map tile provider for interactive mapping
-
-### Database
-- **PostgreSQL**: Primary database (requires `DATABASE_URL` environment variable)
-- **Drizzle Kit**: Database migration and schema push tool (`npm run db:push`)
+- **OpenAI API**: For generating AI-powered HBU analysis (requires `OPENAI_API_KEY` environment variable)
+- **PostgreSQL**: Database backend (requires `DATABASE_URL` environment variable)
+- **Leaflet Tiles**: OpenStreetMap tiles for map rendering
 
 ### Key Libraries
-- **react-leaflet**: Interactive map component with polygon rendering for plot boundaries
-- **jspdf**: Client-side PDF generation for exporting HBU reports
-- **TanStack Query**: Data fetching, caching, and synchronization
-- **Radix UI**: Accessible component primitives for shadcn/ui
-- **Zod**: Runtime type validation for API requests
+- **react-leaflet**: Interactive map components
+- **jsPDF**: PDF generation for HBU report exports
+- **drizzle-orm**: Type-safe database operations
+- **@tanstack/react-query**: Server state management and caching
+- **@radix-ui/***: Accessible UI primitives
+- **zod**: Runtime validation
 
 ### Development Tools
-- **Vite**: Development server with HMR and production builds
-- **tsx**: TypeScript execution for server development
-- **Replit plugins**: Dev banner and cartographer for Replit environment
+- **Vite**: Frontend development server with HMR
+- **drizzle-kit**: Database migration tooling
+- **tsx**: TypeScript execution for development
