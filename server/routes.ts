@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { generateHbuStudy } from "./openai";
 import { z } from "zod";
 
 const hbuStudyRequestSchema = z.object({
@@ -58,15 +57,11 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Plot not found" });
       }
 
-      // Return existing pre-stored study if available
+      // Return pre-stored study from data files
       const existingStudies = await storage.getStudiesForPlot(body.plotId);
       if (existingStudies.length > 0) {
         return res.json({ study: existingStudies[0] });
       }
-
-      // Fallback: Generate using OpenAI if no stored study exists (kept for future use)
-      // const analysis = await generateHbuStudy(plot);
-      // const study = await storage.createStudy({ ... });
       
       res.status(404).json({ error: "No HBU study available for this plot" });
     } catch (error) {

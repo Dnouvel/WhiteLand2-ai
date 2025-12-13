@@ -1,16 +1,14 @@
-import { MapPin, Maximize2, Building2, DollarSign, User, FileText, Loader2, Download, Share2, Bookmark } from "lucide-react";
+import { MapPin, Maximize2, Building2, DollarSign, User, FileText, Loader2, Share2, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import type { Plot, HbuStudy } from "@shared/schema";
+import type { Plot } from "@shared/schema";
 
 interface PlotInfoPanelProps {
   plot: Plot | null;
-  studies: HbuStudy[];
   onGenerateStudy: () => void;
-  onViewStudy: (study: HbuStudy) => void;
   isGenerating: boolean;
 }
 
@@ -43,9 +41,7 @@ function ZoningBadge({ zoning }: { zoning: string }) {
 
 export function PlotInfoPanel({ 
   plot, 
-  studies, 
   onGenerateStudy, 
-  onViewStudy,
   isGenerating 
 }: PlotInfoPanelProps) {
   if (!plot) {
@@ -156,7 +152,7 @@ export function PlotInfoPanel({
 
         <Separator />
 
-        {/* AI Analysis CTA */}
+        {/* HBU Study CTA */}
         <div className="space-y-4">
           <Button 
             className="w-full" 
@@ -168,7 +164,7 @@ export function PlotInfoPanel({
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating Analysis...
+                Loading Analysis...
               </>
             ) : (
               <>
@@ -178,39 +174,9 @@ export function PlotInfoPanel({
             )}
           </Button>
           <p className="text-xs text-center text-muted-foreground">
-            AI-powered analysis takes approximately 30-60 seconds
+            View comprehensive Highest and Best Use analysis for this plot
           </p>
         </div>
-
-        {/* Previous Studies */}
-        {studies.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Previous Studies</h4>
-            <div className="space-y-2">
-              {studies.map((study) => (
-                <div 
-                  key={study.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-md hover-elevate cursor-pointer"
-                  onClick={() => onViewStudy(study)}
-                  data-testid={`card-study-${study.id}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">HBU Study</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(study.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <Button size="icon" variant="ghost">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </ScrollArea>
   );

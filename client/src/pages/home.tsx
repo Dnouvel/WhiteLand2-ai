@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import type { Plot, HbuStudy } from "@shared/schema";
 
 export default function Home() {
@@ -38,12 +38,6 @@ export default function Home() {
     }
   }, [plots, initialSelectionDone, selectedPlot]);
 
-  // Fetch studies for selected plot
-  const { data: studies = [], isLoading: studiesLoading } = useQuery<HbuStudy[]>({
-    queryKey: ['/api/plots', selectedPlot?.id, 'studies'],
-    enabled: !!selectedPlot,
-  });
-
   // Generate HBU study mutation
   const generateStudy = useMutation({
     mutationFn: async (plotId: string) => {
@@ -52,10 +46,9 @@ export default function Home() {
     },
     onSuccess: (data) => {
       toast({
-        title: "HBU Study Generated",
-        description: "Your AI-powered analysis is ready to view.",
+        title: "HBU Study Ready",
+        description: "Your analysis is ready to view.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/plots', selectedPlot?.id, 'studies'] });
       setViewingStudy(data.study);
     },
     onError: (error: Error) => {
@@ -148,9 +141,7 @@ export default function Home() {
         >
           <PlotInfoPanel
             plot={selectedPlot}
-            studies={studies}
             onGenerateStudy={handleGenerateStudy}
-            onViewStudy={setViewingStudy}
             isGenerating={generateStudy.isPending}
           />
         </aside>
@@ -165,9 +156,7 @@ export default function Home() {
             <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mt-3 mb-2" />
             <PlotInfoPanel
               plot={selectedPlot}
-              studies={studies}
               onGenerateStudy={handleGenerateStudy}
-              onViewStudy={setViewingStudy}
               isGenerating={generateStudy.isPending}
             />
           </div>
