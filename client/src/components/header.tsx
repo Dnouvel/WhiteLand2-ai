@@ -1,4 +1,4 @@
-import { Search, Map, Menu } from "lucide-react";
+import { Search, Map, Menu, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./theme-toggle";
@@ -31,12 +31,18 @@ export function Header({ onSearch, onToggleSidebar }: HeaderProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2">
+          <a 
+            href="https://www.whiteland.ai" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2"
+            data-testid="link-logo"
+          >
             <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
               <Map className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-lg hidden sm:inline">PlotVision</span>
-          </div>
+            <span className="font-semibold text-lg hidden sm:inline">WhiteLand.AI</span>
+          </a>
         </div>
 
         {/* Center - Search */}
@@ -56,6 +62,16 @@ export function Header({ onSearch, onToggleSidebar }: HeaderProps) {
 
         {/* Right - Actions */}
         <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            asChild
+            data-testid="button-home"
+          >
+            <a href="https://www.whiteland.ai" target="_blank" rel="noopener noreferrer">
+              <Home className="h-5 w-5" />
+            </a>
+          </Button>
           <ThemeToggle />
         </div>
       </div>
